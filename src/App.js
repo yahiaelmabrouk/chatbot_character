@@ -21,10 +21,8 @@ function App() {
   // Sample chat data
   const [chats, setChats] = useState([
     { id: 1, title: "Welcome Chat", lastMessage: "Hello! I'm your AI assistant...", timestamp: "now" },
-    { id: 2, title: "React development tips", lastMessage: "Tell me about React hooks", timestamp: "2 hours ago" },
-    { id: 3, title: "CSS Grid vs Flexbox", lastMessage: "What's the difference between...", timestamp: "1 day ago" },
-    { id: 4, title: "JavaScript best practices", lastMessage: "How to write clean code", timestamp: "3 days ago" },
-    { id: 5, title: "API integration help", lastMessage: "How to handle async requests", timestamp: "1 week ago" },
+    { id: 2, title: "React development", lastMessage: "Tell me about React hooks", timestamp: "2h" },
+    { id: 3, title: "JavaScript best pr...", lastMessage: "How to write clean code", timestamp: "1d" },
   ]);
 
   const toggleChat = () => {
@@ -224,6 +222,7 @@ function App() {
             activeChatTitle={getCurrentChatTitle()}
             messages={messages}
             onSendMessage={handleSendMessage}
+            onClose={toggleChat}
           />
         </div>
 

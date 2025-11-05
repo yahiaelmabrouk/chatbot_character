@@ -4,10 +4,11 @@ import {
   HiUser, 
   HiSparkles,
   HiChatBubbleLeftRight,
-  HiLightBulb
+  HiLightBulb,
+  HiXMark
 } from 'react-icons/hi2';
 
-const MainChat = ({ activeChat, activeChatTitle, messages, onSendMessage }) => {
+const MainChat = ({ activeChat, activeChatTitle, messages, onSendMessage, onClose }) => {
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef(null);
@@ -68,13 +69,7 @@ const MainChat = ({ activeChat, activeChatTitle, messages, onSendMessage }) => {
       <h3>Start a conversation</h3>
       <p>Ask me anything! I'm here to help with your questions, provide information, or just have a friendly chat.</p>
       
-      <div style={{ 
-        display: 'flex', 
-        gap: '12px', 
-        marginTop: '32px',
-        flexWrap: 'wrap',
-        justifyContent: 'center'
-      }}>
+      <div className="suggestion-buttons">
         {[
           "What can you help me with?",
           "Explain a concept to me",
@@ -84,26 +79,7 @@ const MainChat = ({ activeChat, activeChatTitle, messages, onSendMessage }) => {
           <button
             key={index}
             onClick={() => setInputValue(suggestion)}
-            style={{
-              background: 'var(--bg-secondary)',
-              border: '1px solid var(--border-light)',
-              padding: '8px 16px',
-              borderRadius: '20px',
-              fontSize: '14px',
-              color: 'var(--text-secondary)',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease'
-            }}
-            onMouseEnter={(e) => {
-              e.target.style.background = 'var(--bg-hover)';
-              e.target.style.borderColor = 'var(--border-medium)';
-              e.target.style.color = 'var(--text-primary)';
-            }}
-            onMouseLeave={(e) => {
-              e.target.style.background = 'var(--bg-secondary)';
-              e.target.style.borderColor = 'var(--border-light)';
-              e.target.style.color = 'var(--text-secondary)';
-            }}
+            className="suggestion-btn"
           >
             {suggestion}
           </button>
@@ -129,37 +105,31 @@ const MainChat = ({ activeChat, activeChatTitle, messages, onSendMessage }) => {
 
   return (
     <div className="main-chat">
+      {/* Close Button */}
+      {onClose && (
+        <button className="close-chat-btn" onClick={onClose} aria-label="Close chat">
+          <HiXMark />
+        </button>
+      )}
+      
       {/* Chat Header */}
       <div className="chat-header">
         <div>
           <h2 className="chat-title">
             <HiChatBubbleLeftRight style={{ marginRight: '8px' }} />
-            {activeChatTitle || 'AI Assistant'}
+            {activeChatTitle || 'CSS Grid vs Flexbox'}
           </h2>
           <p style={{ 
-            fontSize: '14px', 
+            fontSize: '13px', 
             color: 'var(--text-secondary)', 
-            margin: '4px 0 0 32px' 
+            margin: '4px 0 0 32px',
+            fontWeight: 500
           }}>
             Ready to help with any questions you have
           </p>
         </div>
-        <div style={{
-          background: 'var(--bg-secondary)',
-          padding: '8px 12px',
-          borderRadius: '20px',
-          fontSize: '12px',
-          color: 'var(--text-secondary)',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '6px'
-        }}>
-          <div style={{
-            width: '8px',
-            height: '8px',
-            background: '#10a37f',
-            borderRadius: '50%'
-          }}></div>
+        <div className="online-status">
+          <div className="status-dot"></div>
           Online
         </div>
       </div>
@@ -198,7 +168,7 @@ const MainChat = ({ activeChat, activeChatTitle, messages, onSendMessage }) => {
             onKeyPress={handleKeyPress}
             rows={1}
             style={{
-              minHeight: '44px',
+              minHeight: '48px',
               maxHeight: '120px',
               resize: 'none',
               overflow: 'hidden'
@@ -217,18 +187,9 @@ const MainChat = ({ activeChat, activeChatTitle, messages, onSendMessage }) => {
           </button>
         </div>
         
-        <div style={{
-          fontSize: '12px',
-          color: 'var(--text-tertiary)',
-          textAlign: 'center',
-          marginTop: '12px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: '6px'
-        }}>
+        <div className="input-hint">
           <HiLightBulb size={14} />
-          Press Enter to send, Shift + Enter for new line
+          Press Enter to send Shift + Enter for new line
         </div>
       </div>
     </div>
