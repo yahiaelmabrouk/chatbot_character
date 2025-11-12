@@ -1,42 +1,66 @@
 import React from 'react';
-import { 
-  HiPlus, 
-  HiChatBubbleLeftRight, 
-  HiSun, 
-  HiMoon,
-  HiClock,
-  HiBars3,
-  HiBell
-} from 'react-icons/hi2';
-import { useTheme } from '../contexts/ThemeContext';
+import { HiBars3, HiChevronLeft, HiPlus, HiChatBubbleLeftRight } from 'react-icons/hi2';
 
-const Sidebar = ({ isOpen, onToggle, onNewChat, chats, activeChat, onSelectChat }) => {
-  const { isDark, toggleTheme } = useTheme();
-
-  // Sample chat data - in a real app, this would come from props or state
-  const chatHistory = chats || [
-    { id: 1, title: "Welcome Chat", lastMessage: "Hello! I'm your AI assistant...", timestamp: "now" },
-    { id: 2, title: "React developmen...", lastMessage: "Tell me about React hooks", timestamp: "2h" },
-    { id: 3, title: "JavaScript best pr...", lastMessage: "How to write clean code", timestamp: "1d" },
-  ];
+const Sidebar = ({
+  isOpen,
+  onToggle,
+  characters,
+  selectedCharacter,
+  onSelectCharacter,
+  sessions = [],
+  currentSessionId,
+  onReturn,
+  onSelectSession,
+  onNewSession
+}) => {
+  const selected = characters?.find(c => c.id === selectedCharacter);
 
   return (
     <div className={`sidebar ${isOpen ? 'open' : ''}`}>
-      {/* Sidebar Header with Character Avatar */}
+      {/* Sidebar Header */}
       <div className="sidebar-header">
-        <div className="character-avatar">
-          <img 
-            src="/character-avatar.svg" 
-            alt="Character Avatar"
-            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-          />
-        </div>
-        <div className="sidebar-title">
-          <span className="sidebar-title-main">Chat with your character</span>
-          <span style={{ fontSize: '12px', color: 'var(--text-tertiary)', fontWeight: 500 }}>
-            Ready to help with any questions you have
-          </span>
-        </div>
+        {!selected ? (
+          <div className="sidebar-title">
+            <span className="sidebar-title-main">Choose Your Character</span>
+            <span style={{ fontSize: '12px', color: 'var(--text-tertiary)', fontWeight: 500 }}>
+              Select a maid to chat with
+            </span>
+          </div>
+        ) : (
+          <div className="sidebar-title" style={{ alignItems: 'flex-start' }}>
+            <button
+              onClick={onReturn}
+              aria-label="Return to character list"
+              style={{
+                border: 'none',
+                background: 'rgba(255,255,255,0.8)',
+                borderRadius: '10px',
+                padding: '8px 10px',
+                cursor: 'pointer',
+                boxShadow: 'var(--shadow-sm)'
+              }}
+            >
+              <HiChevronLeft />
+            </button>
+            <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+              <div
+                className="character-card-image"
+                style={{ 
+                  width: 48, 
+                  height: 48, 
+                  backgroundImage: `url(${selected.image})`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                  backgroundRepeat: 'no-repeat'
+                }}
+              />
+              <div style={{ textAlign: 'left' }}>
+                <span className="sidebar-title-main">{selected.name}</span>
+                <div style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>{selected.personality}</div>
+              </div>
+            </div>
+          </div>
+        )}
         <button 
           className="mobile-toggle"
           onClick={onToggle}
@@ -55,76 +79,64 @@ const Sidebar = ({ isOpen, onToggle, onNewChat, chats, activeChat, onSelectChat 
         </button>
       </div>
 
-      {/* New Chat Button */}
-      <button className="new-chat-btn" onClick={onNewChat}>
-        <HiPlus size={18} />
-        New Chat
-      </button>
-
-      {/* Chat History */}
-      <div className="chat-history">
-        <div className="recent-chats-label">
-          Recent Chats
+      {/* Body */}
+      {!selected ? (
+        <div className="character-list">
+          <div className="recent-chats-label">Available Characters</div>
+          {characters && characters.map((character) => (
+            <div 
+              key={character.id}
+              className={`character-card ${selectedCharacter === character.id ? 'active' : ''}`}
+              onClick={() => onSelectCharacter && onSelectCharacter(character.id)}
+            >
+              <div 
+                className="character-card-image"
+                style={{
+                  backgroundImage: `url(${character.image})`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center'
+                }}
+              />
+              <div className="character-card-info">
+                <h4 className="character-card-name">{character.name}</h4>
+                <p className="character-card-personality">{character.personality}</p>
+                <p className="character-card-description">{character.description}</p>
+              </div>
+            </div>
+          ))}
         </div>
-        
-        {chatHistory.map((chat) => (
-          <div 
-            key={chat.id}
-            className={`chat-item ${activeChat === chat.id ? 'active' : ''}`}
-            onClick={() => onSelectChat && onSelectChat(chat.id)}
+      ) : (
+        <div className="chat-history">
+          <button
+            className="new-chat-btn"
+            onClick={onNewSession}
           >
-            <div className="chat-item-icon">
-              <HiChatBubbleLeftRight />
+            <HiPlus /> New Chat
+          </button>
+          <div className="recent-chats-label">Previous Chats</div>
+          {sessions.length === 0 ? (
+            <div style={{ color: 'var(--text-tertiary)', fontSize: 13, padding: '12px 16px' }}>
+              No chats yet. Start a new conversation.
             </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ 
-                fontWeight: '600',
-                marginBottom: '4px',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
-                fontSize: '13px'
-              }}>
-                {chat.title}
+          ) : (
+            sessions.map(s => (
+              <div
+                key={s.id}
+                className={`chat-item ${currentSessionId === s.id ? 'active' : ''}`}
+                onClick={() => onSelectSession && onSelectSession(s.id)}
+              >
+                <div className="chat-item-icon"><HiChatBubbleLeftRight /></div>
+                <div>
+                  <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{s.title}</div>
+                  <div style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>{(s.messages?.[s.messages.length-1]?.content || '').slice(0, 40)}</div>
+                </div>
               </div>
-              <div style={{ 
-                fontSize: '11px',
-                color: 'var(--text-tertiary)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '4px'
-              }}>
-                <HiClock size={11} />
-                {chat.timestamp}
-              </div>
-            </div>
-            {chat.id === 2 && (
-              <div style={{
-                background: 'var(--bg-accent)',
-                color: 'white',
-                borderRadius: '50%',
-                width: '20px',
-                height: '20px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '10px',
-                fontWeight: '700'
-              }}>
-                <HiBell size={12} />
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
+            ))
+          )}
+        </div>
+      )}
 
-      {/* Sidebar Footer */}
-      <div className="sidebar-footer">
-        <button className="theme-toggle" onClick={toggleTheme}>
-          {isDark ? <HiSun size={18} /> : <HiMoon size={18} />}
-          {isDark ? 'Light' : 'Dark'} Mode
-        </button>
-      </div>
+      {/* Sidebar Footer removed - no theme toggle */}
     </div>
   );
 };

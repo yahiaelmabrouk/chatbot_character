@@ -1,164 +1,196 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
-import { ThemeProvider } from './contexts/ThemeContext';
 import Sidebar from './components/Sidebar';
 import MainChat from './components/MainChat';
-import ChatToggle from './components/ChatToggle';
+import { API_BASE } from './config';
+// Removed ChatToggle; chat is now a full page always-on experience
 
 function App() {
-  const [isChatOpen, setIsChatOpen] = useState(false);
+  // Chat is always visible now; no open/close state
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [activeChat, setActiveChat] = useState(1);
-  const [messages, setMessages] = useState([
+  // Start with no character selected so user sees selection first
+  const [selectedCharacter, setSelectedCharacter] = useState(null);
+  // Track sessions per character: { [charId]: [ { id, title, messages: [] } ] }
+  const [chatSessions, setChatSessions] = useState({});
+  const [currentSessionId, setCurrentSessionId] = useState(null);
+  
+  // Character data
+  const characters = [
     {
       id: 1,
-      type: 'bot',
-      content: "Hello! I'm your AI assistant. How can I help you today?",
-      timestamp: new Date().toISOString()
+      name: 'Sakura',
+      personality: 'Sweet & Cheerful Maid',
+      greeting: "Hello Master! ♥ How may I serve you today?",
+      image: '/chat1.jpg',
+      description: 'A sweet and dedicated maid who always greets you with a warm smile'
+    },
+    {
+      id: 2,
+      name: 'Yuki',
+      personality: 'Elegant & Graceful Maid',
+      greeting: "Good day, Master. It's my pleasure to assist you today.",
+      image: '/chat2.jpg',
+      description: 'An elegant maid with refined manners and impeccable service'
     }
-  ]);
+  ];
 
-  // Sample chat data
-  const [chats, setChats] = useState([
-    { id: 1, title: "Welcome Chat", lastMessage: "Hello! I'm your AI assistant...", timestamp: "now" },
-    { id: 2, title: "React development", lastMessage: "Tell me about React hooks", timestamp: "2h" },
-    { id: 3, title: "JavaScript best pr...", lastMessage: "How to write clean code", timestamp: "1d" },
-  ]);
-
-  const toggleChat = () => {
-    setIsChatOpen(!isChatOpen);
-    // Close sidebar when closing chat on mobile
-    if (isChatOpen) {
-      setIsSidebarOpen(false);
-    }
+  // Helper: get sessions array for current character
+  const getSessionsForCharacter = (charId) => chatSessions[charId] || [];
+  const getCurrentSession = () => {
+    if (!selectedCharacter) return null;
+    return getSessionsForCharacter(selectedCharacter).find(s => s.id === currentSessionId) || null;
   };
+
+  // No chat toggle anymore
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
 
-  const handleNewChat = () => {
-    const newChatId = Math.max(...chats.map(c => c.id)) + 1;
-    const newChat = {
-      id: newChatId,
-      title: "New Chat",
-      lastMessage: "Hello! I'm your AI assistant...",
-      timestamp: "now"
+  const handleSelectCharacter = (characterId) => {
+    // Initialize dummy sessions if first time selecting this character
+    const char = characters.find(c => c.id === characterId);
+    const baseTime = Date.now();
+    const dummy = [
+      {
+        id: baseTime,
+        title: `Getting to know ${char.name}`,
+        messages: [
+          { id: baseTime + 1, type: 'character', content: char.greeting, timestamp: new Date().toISOString() },
+          { id: baseTime + 2, type: 'user', content: `Hello ${char.name}!`, timestamp: new Date().toISOString() },
+          { id: baseTime + 3, type: 'character', content: `It's lovely to chat with you, Master. Ask me anything!`, timestamp: new Date().toISOString() }
+        ]
+      },
+      {
+        id: baseTime + 10,
+        title: `Casual talk with ${char.name}`,
+        messages: [
+          { id: baseTime + 11, type: 'character', content: `We can talk about hobbies or your day.`, timestamp: new Date().toISOString() }
+        ]
+      }
+    ];
+
+    setChatSessions(prev => {
+      if (prev[characterId]) return prev; // already have sessions
+      return { ...prev, [characterId]: dummy };
+    });
+    setSelectedCharacter(characterId);
+    // Select first session by default (dummy[0] if newly created)
+    setCurrentSessionId(prev => (chatSessions[characterId]?.[0]?.id) || dummy[0].id);
+  // Chat is always open; no toggle
+    // Close sidebar on mobile after selecting character
+    if (window.innerWidth <= 768) {
+      setIsSidebarOpen(false);
+    }
+  };
+
+  const handleReturnToCharacterSelection = () => {
+    setSelectedCharacter(null);
+    setCurrentSessionId(null);
+  };
+
+  const handleStartNewSession = () => {
+    if (!selectedCharacter) return;
+    const char = characters.find(c => c.id === selectedCharacter);
+    const newId = Date.now();
+    const newSession = {
+      id: newId,
+      title: `New chat with ${char.name}`,
+      // Start completely empty so the user can begin the conversation
+      messages: []
     };
-    
-    setChats(prev => [newChat, ...prev]);
-    setActiveChat(newChatId);
-    setMessages([
-      {
-        id: 1,
-        type: 'bot',
-        content: "Hello! I'm your AI assistant. How can I help you today?",
-        timestamp: new Date().toISOString()
-      }
-    ]);
-    // Close sidebar on mobile after creating new chat
-    if (window.innerWidth <= 768) {
-      setIsSidebarOpen(false);
-    }
+    setChatSessions(prev => {
+      const sessions = prev[selectedCharacter] || [];
+      return {
+        ...prev,
+        [selectedCharacter]: [...sessions, newSession]
+      };
+    });
+    setCurrentSessionId(newId);
   };
 
-  const handleSelectChat = (chatId) => {
-    setActiveChat(chatId);
-    // Load messages for selected chat (in real app, this would fetch from API)
-    setMessages([
-      {
-        id: 1,
-        type: 'bot',
-        content: "Hello! I'm your AI assistant. How can I help you today?",
-        timestamp: new Date().toISOString()
-      }
-    ]);
-    // Close sidebar on mobile after selecting chat
-    if (window.innerWidth <= 768) {
-      setIsSidebarOpen(false);
-    }
-  };
-
-  // Get current chat title
-  const getCurrentChatTitle = () => {
-    const currentChat = chats.find(chat => chat.id === activeChat);
-    return currentChat ? currentChat.title : 'AI Assistant';
-  };
-
-  const handleSendMessage = (content) => {
+  const handleSendMessage = async (content) => {
+    if (!selectedCharacter) return;
     const userMessage = {
-      id: messages.length + 1,
+      id: Date.now(),
       type: 'user',
       content: content,
       timestamp: new Date().toISOString()
     };
-    
-    setMessages(prev => [...prev, userMessage]);
-    
-    // Update chat title if this is the first user message in a "New Chat"
-    const currentChat = chats.find(chat => chat.id === activeChat);
-    if (currentChat && currentChat.title === "New Chat" && messages.length <= 1) {
-      const newTitle = generateChatTitle(content);
-      setChats(prev => prev.map(chat => 
-        chat.id === activeChat 
-          ? { ...chat, title: newTitle, lastMessage: content }
-          : chat
-      ));
-    }
-    
-    // Simulate bot response
-    setTimeout(() => {
-      const botMessage = {
-        id: messages.length + 2,
-        type: 'bot',
-        content: getBotResponse(content),
+
+    // Append to current session
+    setChatSessions(prev => {
+      const sessions = prev[selectedCharacter] || [];
+      const updated = sessions.map(s =>
+        s.id === currentSessionId ? { ...s, messages: [...s.messages, userMessage] } : s
+      );
+      return { ...prev, [selectedCharacter]: updated };
+    });
+
+    // Call ChatGPT API
+    try {
+      const currentCharacter = getCurrentCharacter();
+      const response = await fetch(`${API_BASE}/api/chat`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include', // Important for session management
+        body: JSON.stringify({
+          message: content,
+          characterContext: {
+            name: currentCharacter.name,
+            personality: currentCharacter.personality,
+            greeting: currentCharacter.greeting
+          }
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to get response from AI');
+      }
+
+      const data = await response.json();
+      
+      const characterResponse = {
+        id: Date.now() + 1,
+        type: 'character',
+        content: data.ai, // Use actual AI response
+        timestamp: data.timestamp
+      };
+      
+      setChatSessions(prev => {
+        const sessions = prev[selectedCharacter] || [];
+        const updated = sessions.map(s =>
+          s.id === currentSessionId ? { ...s, messages: [...s.messages, characterResponse] } : s
+        );
+        return { ...prev, [selectedCharacter]: updated };
+      });
+    } catch (error) {
+      console.error('Error sending message:', error);
+      
+      // Fallback error message
+      const errorMessage = {
+        id: Date.now() + 1,
+        type: 'character',
+        content: "I apologize, Master. I'm having trouble connecting right now. Please try again in a moment.",
         timestamp: new Date().toISOString()
       };
-      setMessages(prev => [...prev, botMessage]);
-    }, 1000 + Math.random() * 2000); // Random delay between 1-3 seconds
+      
+      setChatSessions(prev => {
+        const sessions = prev[selectedCharacter] || [];
+        const updated = sessions.map(s =>
+          s.id === currentSessionId ? { ...s, messages: [...s.messages, errorMessage] } : s
+        );
+        return { ...prev, [selectedCharacter]: updated };
+      });
+    }
   };
 
-  // Generate a title from the user's first message
-  const generateChatTitle = (message) => {
-    // Simple title generation - in a real app, this could use AI
-    const words = message.toLowerCase().split(' ');
-    if (words.length <= 4) {
-      return message.charAt(0).toUpperCase() + message.slice(1);
-    }
-    
-    // Take first 4 words and capitalize
-    const titleWords = words.slice(0, 4);
-    return titleWords.map(word => 
-      word.charAt(0).toUpperCase() + word.slice(1)
-    ).join(' ') + '...';
-  };
-
-  // Simple bot response generator (in real app, this would be AI API call)
-  const getBotResponse = (userMessage) => {
-    const responses = [
-      "That's a great question! Let me help you with that.",
-      "I understand what you're asking. Here's what I think...",
-      "Thanks for sharing that with me. Let me provide some insights.",
-      "That's interesting! Based on what you've told me...",
-      "I'd be happy to help you with that. Here's my suggestion...",
-      "Great point! Let me break this down for you.",
-      "I can definitely assist with that. Here's what I recommend...",
-    ];
-    
-    const randomResponse = responses[Math.floor(Math.random() * responses.length)];
-    
-    // Add some context-aware responses
-    if (userMessage.toLowerCase().includes('react')) {
-      return "React is a fantastic library! " + randomResponse + " React's component-based architecture makes it great for building interactive UIs.";
-    }
-    if (userMessage.toLowerCase().includes('css')) {
-      return "CSS is so powerful for styling! " + randomResponse + " Modern CSS has amazing features like Grid, Flexbox, and custom properties.";
-    }
-    if (userMessage.toLowerCase().includes('javascript')) {
-      return "JavaScript is the language of the web! " + randomResponse + " It's constantly evolving with new features and best practices.";
-    }
-    
-    return randomResponse + " Feel free to ask me anything else you'd like to know!";
+  // Get current character
+  const getCurrentCharacter = () => {
+    if (selectedCharacter == null) return null;
+    return characters.find(char => char.id === selectedCharacter) || null;
   };
 
   // Handle responsive behavior
@@ -173,80 +205,49 @@ function App() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Add mobile CSS for responsive sidebar
-  useEffect(() => {
-    const style = document.createElement('style');
-    style.textContent = `
-      @media (max-width: 768px) {
-        .sidebar {
-          position: fixed !important;
-          left: 0 !important;
-          top: 0 !important;
-          height: 100vh !important;
-          z-index: 1000 !important;
-          transform: translateX(-100%) !important;
-          transition: transform 0.3s ease !important;
-        }
-        
-        .sidebar.open {
-          transform: translateX(0) !important;
-        }
-        
-        .mobile-toggle {
-          display: block !important;
-        }
-      }
-    `;
-    document.head.appendChild(style);
-    
-    return () => {
-      document.head.removeChild(style);
-    };
-  }, []);
-
   return (
-    <ThemeProvider>
-      <div className="App">
-        {/* Main Chat Interface */}
-        <div className={`chatbot-container ${!isChatOpen ? 'hidden' : ''}`}>
-          <Sidebar
-            isOpen={isSidebarOpen}
-            onToggle={toggleSidebar}
-            onNewChat={handleNewChat}
-            chats={chats}
-            activeChat={activeChat}
-            onSelectChat={handleSelectChat}
-          />
-          <MainChat
-            activeChat={activeChat}
-            activeChatTitle={getCurrentChatTitle()}
-            messages={messages}
-            onSendMessage={handleSendMessage}
-            onClose={toggleChat}
-          />
-        </div>
-
-        {/* Floating Chat Toggle Button */}
-        <ChatToggle isOpen={isChatOpen} onToggle={toggleChat} />
-
-        {/* Mobile Sidebar Overlay */}
-        {isSidebarOpen && (
-          <div
-            style={{
-              position: 'fixed',
-              top: 0,
-              left: 0,
-              width: '100%',
-              height: '100%',
-              background: 'rgba(0, 0, 0, 0.5)',
-              zIndex: 999,
-              display: window.innerWidth <= 768 ? 'block' : 'none'
-            }}
-            onClick={() => setIsSidebarOpen(false)}
-          />
-        )}
+    <div className="App">
+  {/* Main Chat Interface - always visible */}
+  <div className={"chatbot-container"}>
+        <Sidebar
+          isOpen={isSidebarOpen}
+          onToggle={toggleSidebar}
+          characters={characters}
+          selectedCharacter={selectedCharacter}
+          sessions={selectedCharacter ? getSessionsForCharacter(selectedCharacter) : []}
+          currentSessionId={currentSessionId}
+          onSelectCharacter={handleSelectCharacter}
+          onReturn={handleReturnToCharacterSelection}
+          onSelectSession={id => setCurrentSessionId(id)}
+          onNewSession={handleStartNewSession}
+        />
+        <MainChat
+          selectedCharacter={getCurrentCharacter()}
+          characterMessages={getCurrentSession() ? getCurrentSession().messages : []}
+          onSendMessage={handleSendMessage}
+          // no close button
+        />
       </div>
-    </ThemeProvider>
+
+      {/* Chat toggle removed */}
+
+      {/* Mobile Sidebar Overlay */}
+      {isSidebarOpen && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            background: 'rgba(0, 0, 0, 0.5)',
+            zIndex: 999,
+            display: window.innerWidth <= 768 ? 'block' : 'none'
+          }}
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+    </div>
   );
 }
 

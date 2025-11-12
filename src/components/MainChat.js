@@ -1,30 +1,24 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { 
-  HiPaperAirplane, 
-  HiUser, 
-  HiSparkles,
-  HiChatBubbleLeftRight,
-  HiLightBulb,
+  HiPaperAirplane,
   HiXMark
 } from 'react-icons/hi2';
 
-const MainChat = ({ activeChat, activeChatTitle, messages, onSendMessage, onClose }) => {
+const MainChat = ({ selectedCharacter, characterMessages, onSendMessage, onClose }) => {
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
 
-  // Sample messages - in a real app, this would come from props
-  const defaultMessages = [
-    {
-      id: 1,
-      type: 'bot',
-      content: "Hello! I'm your AI assistant. How can I help you today?",
-      timestamp: new Date().toISOString()
-    }
-  ];
+  const character = selectedCharacter || {
+    id: 1,
+    name: 'Sakura',
+    personality: 'Sweet and cheerful',
+    greeting: "Hello Master! ♥ How may I serve you today?",
+    image: '/chat1.jpg'
+  };
   
-  const chatMessages = messages || defaultMessages;
+  const chatMessages = useMemo(() => characterMessages || [], [characterMessages]);
 
   // Scroll to bottom when new messages are added
   useEffect(() => {
@@ -62,19 +56,14 @@ const MainChat = ({ activeChat, activeChatTitle, messages, onSendMessage, onClos
   };
 
   const EmptyState = () => (
-    <div className="empty-state">
-      <div className="empty-state-icon">
-        <HiSparkles />
-      </div>
-      <h3>Start a conversation</h3>
-      <p>Ask me anything! I'm here to help with your questions, provide information, or just have a friendly chat.</p>
+    <div className="empty-state-character">
       
       <div className="suggestion-buttons">
         {[
-          "What can you help me with?",
-          "Explain a concept to me",
-          "Help me write some code",
-          "Give me creative ideas"
+          `Tell me about yourself, ${character.name}`,
+          "What do you like to do?",
+          "How are you feeling today?",
+          "Let's have a chat!"
         ].map((suggestion, index) => (
           <button
             key={index}
@@ -89,11 +78,11 @@ const MainChat = ({ activeChat, activeChatTitle, messages, onSendMessage, onClos
   );
 
   const TypingIndicator = () => (
-    <div className="message bot">
-      <div className="message-avatar">
-        <HiSparkles />
+    <div className="message character">
+      <div className="message-avatar character-avatar-small">
+        <img src={character.image} alt={character.name} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
       </div>
-      <div className="message-content">
+      <div className="message-content character-message">
         <div className="typing-indicator">
           <div className="typing-dot"></div>
           <div className="typing-dot"></div>
@@ -103,8 +92,21 @@ const MainChat = ({ activeChat, activeChatTitle, messages, onSendMessage, onClos
     </div>
   );
 
+  const chatStarted = (selectedCharacter && (chatMessages?.length || 0) > 0);
   return (
-    <div className="main-chat">
+    <div className={`main-chat ${chatStarted ? 'chat-started' : 'chat-intro'}`} data-character={character.id}>
+      {/* Shared Background for all characters */}
+      <div 
+        className="character-background"
+        style={{
+          backgroundImage: `url(/bg6.jpg)`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat'
+        }}
+      />
+      <div className="character-overlay" />
+      
       {/* Close Button */}
       {onClose && (
         <button className="close-chat-btn" onClick={onClose} aria-label="Close chat">
@@ -114,19 +116,24 @@ const MainChat = ({ activeChat, activeChatTitle, messages, onSendMessage, onClos
       
       {/* Chat Header */}
       <div className="chat-header">
-        <div>
-          <h2 className="chat-title">
-            <HiChatBubbleLeftRight style={{ marginRight: '8px' }} />
-            {activeChatTitle || 'CSS Grid vs Flexbox'}
-          </h2>
-          <p style={{ 
-            fontSize: '13px', 
-            color: 'var(--text-secondary)', 
-            margin: '4px 0 0 32px',
-            fontWeight: 500
-          }}>
-            Ready to help with any questions you have
-          </p>
+        <div className="character-header-content">
+          <div 
+            className="character-avatar-header"
+            style={{
+              backgroundImage: `url(${character.image})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center'
+            }}
+          >
+          </div>
+          <div>
+            <h2 className="chat-title">
+              {character.name}
+            </h2>
+            <p className="character-subtitle">
+              {character.personality}
+            </p>
+          </div>
         </div>
         <div className="online-status">
           <div className="status-dot"></div>
@@ -135,17 +142,19 @@ const MainChat = ({ activeChat, activeChatTitle, messages, onSendMessage, onClos
       </div>
 
       {/* Messages Area */}
-      <div className="chat-messages">
-        {chatMessages.length === 1 && chatMessages[0].type === 'bot' ? (
+  <div className={`chat-messages ${chatStarted ? 'chat-active-bg' : ''}`}>
+        {chatMessages.length === 0 ? (
           <EmptyState />
         ) : (
           <>
             {chatMessages.map((message) => (
-              <div key={message.id} className={`message ${message.type}`}>
-                <div className="message-avatar">
-                  {message.type === 'user' ? <HiUser /> : <HiSparkles />}
+              <div key={message.id} className={`message ${message.type === 'user' ? 'user' : 'character'}`}>
+                <div className={`message-avatar ${message.type === 'character' ? 'character-avatar-small' : 'user-avatar-small'}`}>
+                  {message.type === 'user' ? '👤' : (
+                    <img src={character.image} alt={character.name} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
+                  )}
                 </div>
-                <div className="message-content">
+                <div className={`message-content ${message.type === 'user' ? 'user-message' : 'character-message'}`}>
                   {message.content}
                 </div>
               </div>
@@ -162,7 +171,7 @@ const MainChat = ({ activeChat, activeChatTitle, messages, onSendMessage, onClos
           <textarea
             ref={inputRef}
             className="chat-input"
-            placeholder="Type your message here..."
+            placeholder={`Message ${character.name}...`}
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyPress={handleKeyPress}
@@ -185,11 +194,6 @@ const MainChat = ({ activeChat, activeChatTitle, messages, onSendMessage, onClos
           >
             <HiPaperAirplane size={16} />
           </button>
-        </div>
-        
-        <div className="input-hint">
-          <HiLightBulb size={14} />
-          Press Enter to send Shift + Enter for new line
         </div>
       </div>
     </div>
