@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './App.css';
 import Sidebar from './components/Sidebar';
 import MainChat from './components/MainChat';
+import CharacterSelect from './components/CharacterSelect';
 import { API_BASE } from './config';
 // Removed ChatToggle; chat is now a full page always-on experience
 
@@ -48,6 +49,8 @@ function App() {
   };
 
   const handleSelectCharacter = (characterId) => {
+    // Reset backend session history when switching characters
+    fetch(`${API_BASE}/api/chat/history`, { method: 'DELETE', credentials: 'include' }).catch(() => {});
     // Initialize dummy sessions if first time selecting this character
     const char = characters.find(c => c.id === characterId);
     const baseTime = Date.now();
@@ -91,6 +94,8 @@ function App() {
 
   const handleStartNewSession = () => {
     if (!selectedCharacter) return;
+    // Clear backend session for a fresh AI context per new session
+    fetch(`${API_BASE}/api/chat/history`, { method: 'DELETE', credentials: 'include' }).catch(() => {});
     const char = characters.find(c => c.id === selectedCharacter);
     const newId = Date.now();
     const newSession = {
@@ -193,6 +198,31 @@ function App() {
     return characters.find(char => char.id === selectedCharacter) || null;
   };
 
+  // Restore from localStorage on mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('chat_state_v1');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.chatSessions) setChatSessions(parsed.chatSessions);
+        if (parsed.selectedCharacter != null) setSelectedCharacter(parsed.selectedCharacter);
+        if (parsed.currentSessionId != null) setCurrentSessionId(parsed.currentSessionId);
+      }
+    } catch (e) {
+      console.warn('Failed to restore chat state:', e);
+    }
+  }, []);
+
+  // Persist to localStorage when state changes
+  useEffect(() => {
+    try {
+      const payload = JSON.stringify({ chatSessions, selectedCharacter, currentSessionId });
+      localStorage.setItem('chat_state_v1', payload);
+    } catch (e) {
+      // ignore
+    }
+  }, [chatSessions, selectedCharacter, currentSessionId]);
+
   // Handle responsive behavior
   useEffect(() => {
     const handleResize = () => {
@@ -205,47 +235,49 @@ function App() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  const showSelectionPage = selectedCharacter == null;
+
   return (
     <div className="App">
-  {/* Main Chat Interface - always visible */}
-  <div className={"chatbot-container"}>
-        <Sidebar
-          isOpen={isSidebarOpen}
-          onToggle={toggleSidebar}
-          characters={characters}
-          selectedCharacter={selectedCharacter}
-          sessions={selectedCharacter ? getSessionsForCharacter(selectedCharacter) : []}
-          currentSessionId={currentSessionId}
-          onSelectCharacter={handleSelectCharacter}
-          onReturn={handleReturnToCharacterSelection}
-          onSelectSession={id => setCurrentSessionId(id)}
-          onNewSession={handleStartNewSession}
-        />
-        <MainChat
-          selectedCharacter={getCurrentCharacter()}
-          characterMessages={getCurrentSession() ? getCurrentSession().messages : []}
-          onSendMessage={handleSendMessage}
-          // no close button
-        />
-      </div>
-
-      {/* Chat toggle removed */}
-
-      {/* Mobile Sidebar Overlay */}
-      {isSidebarOpen && (
-        <div
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            background: 'rgba(0, 0, 0, 0.5)',
-            zIndex: 999,
-            display: window.innerWidth <= 768 ? 'block' : 'none'
-          }}
-          onClick={() => setIsSidebarOpen(false)}
-        />
+      {showSelectionPage ? (
+        <CharacterSelect characters={characters} onSelect={handleSelectCharacter} />
+      ) : (
+        <>
+          <div className={"chatbot-container"}>
+            <Sidebar
+              isOpen={isSidebarOpen}
+              onToggle={toggleSidebar}
+              characters={characters}
+              selectedCharacter={selectedCharacter}
+              sessions={selectedCharacter ? getSessionsForCharacter(selectedCharacter) : []}
+              currentSessionId={currentSessionId}
+              onSelectCharacter={handleSelectCharacter}
+              onReturn={handleReturnToCharacterSelection}
+              onSelectSession={id => setCurrentSessionId(id)}
+              onNewSession={handleStartNewSession}
+            />
+            <MainChat
+              selectedCharacter={getCurrentCharacter()}
+              characterMessages={getCurrentSession() ? getCurrentSession().messages : []}
+              onSendMessage={handleSendMessage}
+            />
+          </div>
+          {isSidebarOpen && (
+            <div
+              style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                width: '100%',
+                height: '100%',
+                background: 'rgba(0, 0, 0, 0.5)',
+                zIndex: 999,
+                display: window.innerWidth <= 768 ? 'block' : 'none'
+              }}
+              onClick={() => setIsSidebarOpen(false)}
+            />
+          )}
+        </>
       )}
     </div>
   );
