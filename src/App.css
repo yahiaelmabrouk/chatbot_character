@@ -3,7 +3,7 @@
 :root {
   /* Light Theme Colors - Soft Pink Aesthetic */
   /* Global font scaling: tweak this to adjust overall text size */
-  --font-scale: 1.125; /* ~12.5% larger than default (100% zoom) */
+  --font-scale: 0.90; /* ~10% smaller than default (100% zoom) */
   --bg-primary: #ffffff;
   --bg-secondary: #fce4ec;
   --bg-tertiary: #f8bbd0;
