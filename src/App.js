@@ -107,6 +107,10 @@ function App() {
       };
     });
     setCurrentSessionId(newId);
+    // On mobile, jump straight into the chat view
+    if (typeof window !== 'undefined' && window.innerWidth <= 768) {
+      setIsSidebarOpen(false);
+    }
   };
 
   const handleSendMessage = async (content) => {
@@ -225,7 +229,13 @@ function App() {
           currentSessionId={currentSessionId}
           onSelectCharacter={handleSelectCharacter}
           onReturn={handleReturnToCharacterSelection}
-          onSelectSession={id => setCurrentSessionId(id)}
+          onSelectSession={id => {
+            setCurrentSessionId(id);
+            // On mobile, close sidebar when opening an existing chat
+            if (typeof window !== 'undefined' && window.innerWidth <= 768) {
+              setIsSidebarOpen(false);
+            }
+          }}
           onNewSession={handleStartNewSession}
         />
         <MainChat
