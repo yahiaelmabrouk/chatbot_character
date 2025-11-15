@@ -1,10 +1,11 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { 
   HiPaperAirplane,
-  HiXMark
+  HiXMark,
+  HiBars3
 } from 'react-icons/hi2';
 
-const MainChat = ({ selectedCharacter, characterMessages, onSendMessage, onClose }) => {
+const MainChat = ({ selectedCharacter, characterMessages, onSendMessage, onClose, onOpenSidebar }) => {
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef(null);
@@ -116,6 +117,14 @@ const MainChat = ({ selectedCharacter, characterMessages, onSendMessage, onClose
       
       {/* Chat Header */}
       <div className="chat-header">
+        {/* Mobile menu button to open sidebar */}
+        <button
+          className="header-mobile-menu"
+          aria-label="Open character list"
+          onClick={() => onOpenSidebar && onOpenSidebar()}
+        >
+          <HiBars3 size={20} />
+        </button>
         <div className="character-header-content">
           <div 
             className="character-avatar-header"

@@ -577,6 +577,24 @@ body {
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
 }
 
+/* Mobile header menu button */
+.header-mobile-menu {
+  display: none;
+  background: rgba(248, 187, 208, 0.6);
+  border: 1px solid var(--border-light);
+  color: var(--text-primary);
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  align-items: center;
+  justify-content: center;
+  margin-right: 12px;
+}
+
+.header-mobile-menu:active {
+  transform: scale(0.97);
+}
+
 .chat-title {
   font-size: calc(var(--font-scale) * 20px);
   font-weight: 700;
@@ -1013,6 +1031,13 @@ body {
 
 /* Responsive Design */
 @media (max-width: 768px) {
+  .chat-header {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+  .header-mobile-menu {
+    display: inline-flex;
+  }
   .sidebar {
     position: absolute;
     left: 0;

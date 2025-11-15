@@ -47,6 +47,8 @@ function App() {
     setIsSidebarOpen(!isSidebarOpen);
   };
 
+  const openSidebar = () => setIsSidebarOpen(true);
+
   const handleSelectCharacter = (characterId) => {
     // Initialize dummy sessions if first time selecting this character
     const char = characters.find(c => c.id === characterId);
@@ -225,6 +227,7 @@ function App() {
           selectedCharacter={getCurrentCharacter()}
           characterMessages={getCurrentSession() ? getCurrentSession().messages : []}
           onSendMessage={handleSendMessage}
+          onOpenSidebar={openSidebar}
           // no close button
         />
       </div>
