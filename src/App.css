@@ -577,22 +577,23 @@ body {
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
 }
 
-/* Mobile header menu button */
-.header-mobile-menu {
+/* Mobile hamburger button (hidden on desktop) */
+.hamburger-btn {
   display: none;
-  background: rgba(248, 187, 208, 0.6);
-  border: 1px solid var(--border-light);
-  color: var(--text-primary);
+  align-items: center;
+  justify-content: center;
   width: 36px;
   height: 36px;
   border-radius: 10px;
-  align-items: center;
-  justify-content: center;
-  margin-right: 12px;
+  border: 1px solid var(--border-light);
+  background: rgba(248, 187, 208, 0.35);
+  color: var(--text-primary);
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
 }
 
-.header-mobile-menu:active {
-  transform: scale(0.97);
+.hamburger-btn:active {
+  transform: scale(0.96);
 }
 
 .chat-title {
@@ -1031,19 +1032,12 @@ body {
 
 /* Responsive Design */
 @media (max-width: 768px) {
-  .chat-header {
-    padding-left: 16px;
-    padding-right: 16px;
-  }
-  .header-mobile-menu {
-    display: inline-flex;
-  }
   .sidebar {
     position: absolute;
     left: 0;
     top: 0;
     height: 100%;
-    z-index: 100;
+    z-index: 2001; /* above the dark overlay */
     transform: translateX(-100%);
     box-shadow: var(--shadow-xl);
   }
@@ -1083,6 +1077,10 @@ body {
   
   .main-chat {
     width: 100%;
+  }
+
+  .hamburger-btn {
+    display: inline-flex;
   }
 }
 
@@ -1250,7 +1248,7 @@ body {
 /* Character List in Sidebar */
 .character-list {
   flex: 1;
-  padding: 8px;
+  padding: 12px 10px 16px;
   overflow-y: auto;
   position: relative;
   z-index: 1;
@@ -1258,7 +1256,7 @@ body {
 
 /* Character card styling */
 .character-card {
-  padding: 16px;
+  padding: 18px 16px;
   margin-bottom: 12px;
   border-radius: 20px;
   cursor: pointer;
@@ -1761,7 +1759,7 @@ body {
 /* Responsive adjustments for character layout */
 @media (max-width: 768px) {
   .character-card {
-    padding: 12px;
+    padding: 16px 14px;
   }
   
   .character-card-image {
@@ -1771,7 +1769,7 @@ body {
   }
   
   .character-card-name {
-    font-size: 16px;
+    font-size: 17px;
   }
   
   .character-intro {

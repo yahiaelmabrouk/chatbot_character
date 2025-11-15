@@ -47,8 +47,6 @@ function App() {
     setIsSidebarOpen(!isSidebarOpen);
   };
 
-  const openSidebar = () => setIsSidebarOpen(true);
-
   const handleSelectCharacter = (characterId) => {
     // Initialize dummy sessions if first time selecting this character
     const char = characters.find(c => c.id === characterId);
@@ -207,6 +205,13 @@ function App() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // On mobile, keep the sidebar open when no character is selected
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.innerWidth <= 768) {
+      setIsSidebarOpen(selectedCharacter == null);
+    }
+  }, [selectedCharacter]);
+
   return (
     <div className="App">
   {/* Main Chat Interface - always visible */}
@@ -227,29 +232,14 @@ function App() {
           selectedCharacter={getCurrentCharacter()}
           characterMessages={getCurrentSession() ? getCurrentSession().messages : []}
           onSendMessage={handleSendMessage}
-          onOpenSidebar={openSidebar}
+          onOpenSidebar={() => setIsSidebarOpen(true)}
           // no close button
         />
       </div>
 
       {/* Chat toggle removed */}
 
-      {/* Mobile Sidebar Overlay */}
-      {isSidebarOpen && (
-        <div
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            background: 'rgba(0, 0, 0, 0.5)',
-            zIndex: 999,
-            display: window.innerWidth <= 768 ? 'block' : 'none'
-          }}
-          onClick={() => setIsSidebarOpen(false)}
-        />
-      )}
+      {/* Mobile Sidebar Overlay removed to keep character list clear */}
     </div>
   );
 }

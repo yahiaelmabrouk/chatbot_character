@@ -117,15 +117,17 @@ const MainChat = ({ selectedCharacter, characterMessages, onSendMessage, onClose
       
       {/* Chat Header */}
       <div className="chat-header">
-        {/* Mobile menu button to open sidebar */}
-        <button
-          className="header-mobile-menu"
-          aria-label="Open character list"
-          onClick={() => onOpenSidebar && onOpenSidebar()}
-        >
-          <HiBars3 size={20} />
-        </button>
         <div className="character-header-content">
+          {/* Mobile hamburger to open sidebar */}
+          {onOpenSidebar && (
+            <button
+              className="hamburger-btn"
+              aria-label="Open character sidebar"
+              onClick={onOpenSidebar}
+            >
+              <HiBars3 size={20} />
+            </button>
+          )}
           <div 
             className="character-avatar-header"
             style={{

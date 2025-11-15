@@ -1,5 +1,5 @@
 import React from 'react';
-import { HiBars3, HiChevronLeft, HiPlus, HiChatBubbleLeftRight } from 'react-icons/hi2';
+import { HiBars3, HiChevronLeft, HiPlus, HiChatBubbleLeftRight, HiXMark } from 'react-icons/hi2';
 
 const Sidebar = ({
   isOpen,
@@ -74,8 +74,9 @@ const Sidebar = ({
             right: '16px',
             top: '16px'
           }}
+          aria-label={isOpen ? 'Close sidebar' : 'Open sidebar'}
         >
-          <HiBars3 size={20} />
+          {isOpen ? <HiXMark size={20} /> : <HiBars3 size={20} />}
         </button>
       </div>
 
