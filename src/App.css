@@ -2,6 +2,8 @@
 /* CSS Variables for Theme System */
 :root {
   /* Light Theme Colors - Soft Pink Aesthetic */
+  /* Global font scaling: tweak this to adjust overall text size */
+  --font-scale: 1.125; /* ~12.5% larger than default (100% zoom) */
   --bg-primary: #ffffff;
   --bg-secondary: #fce4ec;
   --bg-tertiary: #f8bbd0;
@@ -164,7 +166,7 @@ body {
 
 .hero-subtitle {
   margin-top: 8px;
-  font-size: 14px;
+  font-size: calc(var(--font-scale) * 14px);
   color: var(--text-secondary);
 }
 
@@ -273,7 +275,7 @@ body {
 
 .character-circle-name {
   font-weight: 900;
-  font-size: 16px;
+  font-size: calc(var(--font-scale) * 16px);
   background: var(--gradient-primary);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -281,7 +283,7 @@ body {
 }
 
 .character-circle-sub {
-  font-size: 11px;
+  font-size: calc(var(--font-scale) * 11px);
   color: var(--text-secondary);
   margin-top: 4px;
 }
@@ -421,7 +423,7 @@ body {
 }
 
 .sidebar-title {
-  font-size: 16px;
+  font-size: calc(var(--font-scale) * 16px);
   font-weight: 600;
   color: var(--text-primary);
   text-align: center;
@@ -432,7 +434,7 @@ body {
 }
 
 .sidebar-title-main {
-  font-size: 18px;
+  font-size: calc(var(--font-scale) * 18px);
   font-weight: 700;
   background: var(--gradient-primary);
   -webkit-background-clip: text;
@@ -455,7 +457,7 @@ body {
   transition: all 0.3s ease;
   width: calc(100% - 32px);
   margin: 16px;
-  font-size: 14px;
+  font-size: calc(var(--font-scale) * 14px);
   box-shadow: var(--shadow-md);
   position: relative;
   z-index: 1;
@@ -479,7 +481,7 @@ body {
 }
 
 .recent-chats-label {
-  font-size: 11px;
+  font-size: calc(var(--font-scale) * 11px);
   font-weight: 700;
   color: var(--text-secondary);
   padding: 12px 12px 8px 12px;
@@ -497,7 +499,7 @@ body {
   align-items: flex-start;
   gap: 10px;
   color: var(--text-secondary);
-  font-size: 13px;
+  font-size: calc(var(--font-scale) * 13px);
   background: rgba(255, 255, 255, 0.4);
   border: 1px solid rgba(255, 255, 255, 0.6);
   backdrop-filter: blur(10px);
@@ -576,7 +578,7 @@ body {
 }
 
 .chat-title {
-  font-size: 20px;
+  font-size: calc(var(--font-scale) * 20px);
   font-weight: 700;
   color: var(--text-primary);
   display: flex;
@@ -588,7 +590,7 @@ body {
   background: rgba(248, 187, 208, 0.3);
   padding: 8px 16px;
   border-radius: 20px;
-  font-size: 12px;
+  font-size: calc(var(--font-scale) * 12px);
   color: var(--text-secondary);
   display: flex;
   align-items: center;
@@ -699,7 +701,7 @@ body {
   max-width: 65%;
   padding: 14px 18px;
   border-radius: 20px;
-  font-size: 14px;
+  font-size: calc(var(--font-scale) * 14px);
   line-height: 1.6;
   position: relative;
 }
@@ -743,7 +745,7 @@ body {
   border-radius: 30px;
   background: #ffffff;
   color: var(--text-primary);
-  font-size: 14px;
+  font-size: calc(var(--font-scale) * 14px);
   resize: none;
   outline: none;
   transition: all 0.3s ease;
@@ -795,7 +797,7 @@ body {
 }
 
 .input-hint {
-  font-size: 11px;
+  font-size: calc(var(--font-scale) * 11px);
   color: var(--text-tertiary);
   text-align: center;
   margin-top: 12px;
@@ -915,7 +917,7 @@ body {
 }
 
 .empty-state p {
-  font-size: 16px;
+  font-size: calc(var(--font-scale) * 16px);
   max-width: 480px;
   line-height: 1.6;
   color: var(--text-secondary);
@@ -935,7 +937,7 @@ body {
   padding: 8px 20px;
   min-height: 36px;
   border-radius: 9999px; /* pill */
-  font-size: 14px;
+  font-size: calc(var(--font-scale) * 14px);
   color: #ffffff; /* high contrast on pink */
   cursor: pointer;
   transition: transform 0.18s cubic-bezier(.2,.9,.2,1), box-shadow 0.18s ease, filter 0.12s ease;
