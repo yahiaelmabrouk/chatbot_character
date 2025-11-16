@@ -1032,14 +1032,18 @@ body {
 
 /* Responsive Design */
 @media (max-width: 768px) {
+  /* Move sidebar to the right on mobile */
   .sidebar {
     position: absolute;
-    left: 0;
+    right: 0;
+    left: auto;
     top: 0;
     height: 100%;
     z-index: 2001; /* above the dark overlay */
-    transform: translateX(-100%);
-    box-shadow: var(--shadow-xl);
+    transform: translateX(100%);
+    box-shadow: -4px 0 30px rgba(236, 64, 122, 0.25);
+    border-right: 0;
+    border-left: 2px solid rgba(236, 64, 122, 0.3);
   }
   
   .sidebar.open {
@@ -1079,8 +1083,19 @@ body {
     width: 100%;
   }
 
+  /* Place hamburger on the right side of the header */
   .hamburger-btn {
     display: inline-flex;
+    position: absolute;
+    right: 16px;
+    left: auto;
+    top: 16px;
+    z-index: 11;
+  }
+
+  /* Hide the online status on mobile to reduce header clutter */
+  .online-status {
+    display: none !important;
   }
 }
 
@@ -1399,6 +1414,36 @@ body {
 
 .character-card-info {
   flex: 1;
+}
+
+/* Selection light indicator (mobile only) */
+.selection-light {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .selection-light {
+    display: block;
+    position: absolute;
+    /* place near the top-right of the avatar */
+    top: 14px;
+    right: 20px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, #fff 0%, rgba(255,255,255,0.9) 10%, #ff80ab 40%, #ec407a 100%);
+    border: 2px solid #ffffff;
+    box-shadow: 0 0 10px rgba(236,64,122,0.45), 0 0 22px rgba(236,64,122,0.18);
+    z-index: 5;
+    animation: selectionGlow 1.6s ease-in-out infinite;
+    pointer-events: none;
+  }
+
+  @keyframes selectionGlow {
+    0% { transform: scale(0.92); box-shadow: 0 0 6px rgba(236,64,122,0.35); }
+    50% { transform: scale(1.06); box-shadow: 0 0 16px rgba(236,64,122,0.6); }
+    100% { transform: scale(0.92); box-shadow: 0 0 6px rgba(236,64,122,0.35); }
+  }
 }
 
 .character-card-name {

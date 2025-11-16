@@ -6,6 +6,7 @@ const Sidebar = ({
   onToggle,
   characters,
   selectedCharacter,
+  activeCharacter,
   onSelectCharacter,
   sessions = [],
   currentSessionId,
@@ -84,27 +85,40 @@ const Sidebar = ({
       {!selected ? (
         <div className="character-list">
           <div className="recent-chats-label">Available Characters</div>
-          {characters && characters.map((character) => (
-            <div 
-              key={character.id}
-              className={`character-card ${selectedCharacter === character.id ? 'active' : ''}`}
-              onClick={() => onSelectCharacter && onSelectCharacter(character.id)}
-            >
+          {characters && characters.map((character) => {
+            // Determine if this card should display as active.
+            // When we're on the chat view `selectedCharacter` will be set.
+            // When we're back on the character selection page `selectedCharacter` is null,
+            // but we want to indicate `activeCharacter` so the user knows which
+            // character they were working with.
+            const isActiveCard = (selectedCharacter === character.id) || (!selected && activeCharacter === character.id);
+
+            return (
               <div 
-                className="character-card-image"
-                style={{
-                  backgroundImage: `url(${character.image})`,
-                  backgroundSize: 'cover',
-                  backgroundPosition: 'center'
-                }}
-              />
-              <div className="character-card-info">
-                <h4 className="character-card-name">{character.name}</h4>
-                <p className="character-card-personality">{character.personality}</p>
-                <p className="character-card-description">{character.description}</p>
+                key={character.id}
+                className={`character-card ${isActiveCard ? 'active' : ''}`}
+                onClick={() => onSelectCharacter && onSelectCharacter(character.id)}
+              >
+                <div 
+                  className="character-card-image"
+                  style={{
+                    backgroundImage: `url(${character.image})`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center'
+                  }}
+                />
+                {/* Show the mobile selection light when card is active */}
+                {isActiveCard && (
+                  <div className="selection-light" aria-hidden="true" />
+                )}
+                <div className="character-card-info">
+                  <h4 className="character-card-name">{character.name}</h4>
+                  <p className="character-card-personality">{character.personality}</p>
+                  <p className="character-card-description">{character.description}</p>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       ) : (
         <div className="chat-history">

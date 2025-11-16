@@ -9,7 +9,11 @@ function App() {
   // Chat is always visible now; no open/close state
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   // Start with no character selected so user sees selection first
-  const [selectedCharacter, setSelectedCharacter] = useState(null);
+  // Default selected character is Sakura (id:1)
+  const [selectedCharacter, setSelectedCharacter] = useState(1);
+  // Track the last active character so when user returns to selection
+  // they can see which character they're currently working with
+  const [activeCharacter, setActiveCharacter] = useState(1);
   // Track sessions per character: { [charId]: [ { id, title, messages: [] } ] }
   const [chatSessions, setChatSessions] = useState({});
   const [currentSessionId, setCurrentSessionId] = useState(null);
@@ -37,8 +41,10 @@ function App() {
   // Helper: get sessions array for current character
   const getSessionsForCharacter = (charId) => chatSessions[charId] || [];
   const getCurrentSession = () => {
-    if (!selectedCharacter) return null;
-    return getSessionsForCharacter(selectedCharacter).find(s => s.id === currentSessionId) || null;
+    // When returning to the character list, keep using the last active character
+    const id = selectedCharacter ?? activeCharacter;
+    if (!id) return null;
+    return getSessionsForCharacter(id).find(s => s.id === currentSessionId) || null;
   };
 
   // No chat toggle anymore
@@ -75,6 +81,8 @@ function App() {
       return { ...prev, [characterId]: dummy };
     });
     setSelectedCharacter(characterId);
+    // remember this as the active character
+    setActiveCharacter(characterId);
     // Select first session by default (dummy[0] if newly created)
     setCurrentSessionId(prev => (chatSessions[characterId]?.[0]?.id) || dummy[0].id);
   // Chat is always open; no toggle
@@ -84,14 +92,61 @@ function App() {
     }
   };
 
+  // Initialize sessions for default selected character (Sakura) on first load
+  useEffect(() => {
+    const initForSelected = async () => {
+      if (!selectedCharacter) return;
+      if (chatSessions[selectedCharacter]) return; // already initialized
+
+      const char = characters.find(c => c.id === selectedCharacter);
+      if (!char) return;
+
+      // Create a fresh, empty chat session for the default selected character
+      const newId = Date.now();
+      const newSession = {
+        id: newId,
+        title: `New chat with ${char.name}`,
+        messages: []
+      };
+
+      // Also include previous dummy sessions so the "Previous Chats" list is populated
+      const baseTime = newId + 1000;
+      const dummyOlder = [
+        {
+          id: baseTime,
+          title: `Getting to know ${char.name}`,
+          messages: [
+            { id: baseTime + 1, type: 'character', content: char.greeting, timestamp: new Date().toISOString() },
+            { id: baseTime + 2, type: 'user', content: `Hello ${char.name}!`, timestamp: new Date().toISOString() },
+            { id: baseTime + 3, type: 'character', content: `It's lovely to chat with you, Master. Ask me anything!`, timestamp: new Date().toISOString() }
+          ]
+        },
+        {
+          id: baseTime + 10,
+          title: `Casual talk with ${char.name}`,
+          messages: [
+            { id: baseTime + 11, type: 'character', content: `We can talk about hobbies or your day.`, timestamp: new Date().toISOString() }
+          ]
+        }
+      ];
+
+      setChatSessions(prev => ({ ...prev, [selectedCharacter]: [newSession, ...dummyOlder] }));
+      setCurrentSessionId(prev => prev || newId);
+    };
+
+    initForSelected();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedCharacter]);
+
   const handleReturnToCharacterSelection = () => {
+    // Return to character list but keep active character/session so chat persists
     setSelectedCharacter(null);
-    setCurrentSessionId(null);
   };
 
   const handleStartNewSession = () => {
-    if (!selectedCharacter) return;
-    const char = characters.find(c => c.id === selectedCharacter);
+    const targetId = selectedCharacter ?? activeCharacter;
+    if (!targetId) return;
+    const char = characters.find(c => c.id === targetId);
     const newId = Date.now();
     const newSession = {
       id: newId,
@@ -100,10 +155,10 @@ function App() {
       messages: []
     };
     setChatSessions(prev => {
-      const sessions = prev[selectedCharacter] || [];
+      const sessions = prev[targetId] || [];
       return {
         ...prev,
-        [selectedCharacter]: [...sessions, newSession]
+        [targetId]: [...sessions, newSession]
       };
     });
     setCurrentSessionId(newId);
@@ -114,7 +169,9 @@ function App() {
   };
 
   const handleSendMessage = async (content) => {
-    if (!selectedCharacter) return;
+    // Support sending while viewing the character list by using last active
+    const targetCharId = selectedCharacter ?? activeCharacter;
+    if (!targetCharId) return;
     const userMessage = {
       id: Date.now(),
       type: 'user',
@@ -124,16 +181,28 @@ function App() {
 
     // Append to current session
     setChatSessions(prev => {
-      const sessions = prev[selectedCharacter] || [];
-      const updated = sessions.map(s =>
-        s.id === currentSessionId ? { ...s, messages: [...s.messages, userMessage] } : s
+      const sessions = prev[targetCharId] || [];
+      let sessionIdToUse = currentSessionId;
+      let updatedSessions = sessions;
+      if (!sessionIdToUse) {
+        // Create a new session on the fly if none is active
+        const char = characters.find(c => c.id === targetCharId);
+        sessionIdToUse = Date.now();
+        updatedSessions = [
+          ...sessions,
+          { id: sessionIdToUse, title: `New chat with ${char?.name || 'Character'}`, messages: [] }
+        ];
+        setCurrentSessionId(sessionIdToUse);
+      }
+      const updated = updatedSessions.map(s =>
+        s.id === sessionIdToUse ? { ...s, messages: [...s.messages, userMessage] } : s
       );
-      return { ...prev, [selectedCharacter]: updated };
+      return { ...prev, [targetCharId]: updated };
     });
 
     // Call ChatGPT API
     try {
-      const currentCharacter = getCurrentCharacter();
+      const currentCharacter = characters.find(c => c.id === targetCharId);
       const response = await fetch(`${API_BASE}/api/chat`, {
         method: 'POST',
         headers: {
@@ -164,11 +233,11 @@ function App() {
       };
       
       setChatSessions(prev => {
-        const sessions = prev[selectedCharacter] || [];
+        const sessions = prev[targetCharId] || [];
         const updated = sessions.map(s =>
           s.id === currentSessionId ? { ...s, messages: [...s.messages, characterResponse] } : s
         );
-        return { ...prev, [selectedCharacter]: updated };
+        return { ...prev, [targetCharId]: updated };
       });
     } catch (error) {
       console.error('Error sending message:', error);
@@ -182,19 +251,20 @@ function App() {
       };
       
       setChatSessions(prev => {
-        const sessions = prev[selectedCharacter] || [];
+        const sessions = prev[targetCharId] || [];
         const updated = sessions.map(s =>
           s.id === currentSessionId ? { ...s, messages: [...s.messages, errorMessage] } : s
         );
-        return { ...prev, [selectedCharacter]: updated };
+        return { ...prev, [targetCharId]: updated };
       });
     }
   };
 
   // Get current character
   const getCurrentCharacter = () => {
-    if (selectedCharacter == null) return null;
-    return characters.find(char => char.id === selectedCharacter) || null;
+    const id = selectedCharacter ?? activeCharacter;
+    if (id == null) return null;
+    return characters.find(char => char.id === id) || null;
   };
 
   // Handle responsive behavior
@@ -225,6 +295,7 @@ function App() {
           onToggle={toggleSidebar}
           characters={characters}
           selectedCharacter={selectedCharacter}
+          activeCharacter={activeCharacter}
           sessions={selectedCharacter ? getSessionsForCharacter(selectedCharacter) : []}
           currentSessionId={currentSessionId}
           onSelectCharacter={handleSelectCharacter}
@@ -239,7 +310,7 @@ function App() {
           onNewSession={handleStartNewSession}
         />
         <MainChat
-          selectedCharacter={getCurrentCharacter()}
+          selectedCharacter={getCurrentCharacter() || characters.find(c => c.id === activeCharacter)}
           characterMessages={getCurrentSession() ? getCurrentSession().messages : []}
           onSendMessage={handleSendMessage}
           onOpenSidebar={() => setIsSidebarOpen(true)}
